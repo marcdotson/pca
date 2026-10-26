@@ -1,5 +1,5 @@
 ---
-title: "Python Orientation"
+title: "PCA"
 subtitle: "Marketing Analytics Club"
 title-slide-attributes:
   data-background-color: "#0F2439"
