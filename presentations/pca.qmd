@@ -1,0 +1,207 @@
+---
+title: "Introduction to PCA <br>and Competitive Maps"
+subtitle: "Marketing Analytics Club"
+title-slide-attributes:
+  data-background-color: "#0F2439"
+format: 
+  revealjs:
+    theme: slides.scss     # Modified slides theme
+    code-copy: true        # Show code blocks copy button
+    slide-number: c/t      # Numbered slides current/total
+    embed-resources: true  # Render to a single HTML file
+    footer: "[github.com/marcdotson/pca](https://github.com/marcdotson/pca)"
+execute:
+  eval: false
+  echo: true
+  cache: false
+jupyter: python3
+---
+
+# Finding Data {background-color="#288DC2"}
+
+## Garbage in, garbage out
+
+Ideas for finding data
+
+::: {.incremental}
+- Idea
+- Another idea
+:::
+
+# Cleaning Data {background-color="#288DC2"}
+
+## Data wrangling with Polars/Pandas?
+
+Code won't run unless specified...
+
+```{python}
+import polars as pl
+from plotnine import *
+from pyprojroot.here import here
+
+# Load data.
+customer_data = pl.read_csv(here('data/customer_data.csv'))
+store_transactions = pl.read_csv(here('data/store_transactions.csv'))
+
+# Visualize customers by region.
+(ggplot(customer_data, aes(x = 'region'))
+  + geom_bar()
+)
+
+# Number of customers by region.
+(customer_data
+  .group_by(pl.col('region'))
+  .agg(n = pl.len())
+)
+```
+
+# Principal Component Analysis {background-color="#288DC2"}
+
+## Unsupervised learning
+
+Unsupervised learning is one of three types of machine learning (the other two are supervised learning and reinforcement learning)
+
+::: {.incremental}
+- Learn groups and patterns in data without labeled outputs
+- If we're grouping rows in a dataset, this is called **clustering**
+- If we're grouping columns in a dataset, this is called **dimensionality reduction**
+:::
+
+## Dimensionality reduction methods
+
+Dimensionality (e.g., dimension) reduction refers to unsupervised learning methods that **summarize a large number of variables** into a smaller number of **latent variables**
+
+::: {.incremental}
+- Factor analysis
+- Principal component analysis (PCA)
+- Multi-dimensional scaling
+:::
+
+## Learning a low-dimensional representation
+
+The goal of **principal component analysis** (PCA) is to find a **low-dimensional representation of the data** that captures the important information from the original high-dimensional data
+
+::: {.incremental}
+- For example, PCA could let us go from a 10-variable model to a 2-variable model while still retaining the important information from all 10 variables
+- These new variables are called **principal components**
+- Evidence suggests most data sets exist on a **lower-dimensional manifold** (e.g., balled-up piece of paper)
+- While all $n$ observations exist in a $p$-dimensional space, not every dimension is informative
+:::
+
+## Normalized linear combinations
+
+Each $k$ principal components is a **normalized linear combination** of the original $p-1$ predictor variables
+
+$$
+PC_{k} = \phi_{1,k} X_{1} + \phi_{2,k} X_{2} + \phi_{3,k} X_{3} + \cdots + \phi_{p-1,k} X_{p-1}
+$$
+
+where $\sum_{j=1}^{p-1} \phi_{j,k}^2 = 1$ (i.e., "normalized")
+
+::: {.incremental}
+- There are $p$ predictors including the intercept so we really have $p−1$ predictors
+- $\phi$s are the **loadings** of each principal component
+- $\phi_{j,1}$ represents the $j$th loading corresponding to the $j$th predictor of the first principal component
+- The predictors all need to be **standardized before performing PCA**
+- At most there are $p$ principal commponents
+:::
+
+## Uncorrelated components
+
+PCA identifies new dimensions that are linear combinations of all the predictor variables
+
+$$
+\begin{align}
+PC_{1} &= 0.3 X_{1} - 0.1 X_{2} - 0.3 X_{3} + \cdots + 0.5 X_{8} + 0.7 X_{9} + 0.5 X_{10}\\
+PC_{2} &= 0.7 X_{1} + 0.6 X_{2} - 0.2 X_{3} + \cdots + 0.8 X_{8} + 0.5 X_{9} - 0.2 X_{10}
+\end{align}
+$$
+
+::: {.incremental}
+- PCA can transform highly correlated variables into a few main, **uncorrelated principal components**
+- Since the principal components are uncorrelated, multicollinearity is no longer an issue
+- However, **interpretability** of the components can be difficult
+:::
+
+## Variation and orthogonality {auto-animate=true}
+
+![](../../figures/plot_pca-01.png){fig-align="center"}
+
+## Variation and orthogonality {auto-animate=true visibility="uncounted"}
+
+:::: {.columns}
+
+::: {.column width="50%"}
+![](../../figures/plot_pca-01.png){fig-align="center"}
+:::
+
+::: {.column width="50%"}
+::: {.incremental}
+- The first principal component goes in the direction where the **observations vary the most**
+- The second principal component is **orthogonal to the first principal component** and goes in the direction of the **second largest variance of the observations**
+- Each subsequent principal component finds the **next** largest variance where each is **orthogonal to all previous principal components**
+:::
+:::
+
+::::
+
+## Variation and orthogonality
+
+![](../../figures/plot_pca-02.png){fig-align="center"}
+
+# Competitive Maps {background-color="#288DC2"}
+
+## Combine standardizing and model specification
+
+Remember, a **pipeline** is a scikit-learn object that combines feature engineering (i.e., transformations) and the model (e.g., PCA)
+
+```{python}
+#| code-line-numbers: "|4|7|12"
+
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+
+# Split data into train and test
+X_train, X_test = train_test_split(X, test_size = 0.2, random_state = 42)
+
+# Create a pipeline
+pca_pipe = Pipeline([
+  ('feature_engineering', StandardScaler()),
+  ('pca', PCA(n_components = X_train.shape[1])),
+])
+```
+
+## Fit the model and extract components
+
+Hyperparameter tuning on $k$ is accomplished by PCA fitting up to $p$ principal components
+
+```{python}
+#| code-line-numbers: "|1-2|4-6|5|6|8"
+
+# Fit PCA
+pca_fit = pca_pipe.fit(X_train)
+
+# Extract explained variance ratio
+pca_steps = pca_fit.named_steps['pca']
+pca_scores = pca_steps.explained_variance_ratio_
+
+print(pca_scores)
+```
+
+
+
+
+
+## {background-color="#0F2439"}
+
+### Application {.lato-font}
+
+1. Install uv (visit [docs.astral.sh/uv](https://docs.astral.sh/uv/getting-started/installation/)) via the command line
+2. Restart the command line and install Python using `uv python install` via the command line
+3. Register for a GitHub account with a *professional username* using your student email address (visit [github.com](https://github.com)) and download this workshop repository (visit [github.com/marcdotson/pydata-python](https://github.com/marcdotson/pydata-python))
+4. Download and install VS Code (visit [code.visualstudio.com](https://code.visualstudio.com)) and the Python extension in VS Code
+5. Inside VS Code, open the downloaded workshop repository and activate the project environment with `uv run` via the terminal
+6. Use and modify the Python script or notebook and explore the included data
+

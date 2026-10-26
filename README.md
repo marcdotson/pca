@@ -1,8 +1,11 @@
-# Python Orientation
+# Introduction to PCA and Competitive Maps
 
 
-Python is a big tent. Follow along for a brief orientation to “the
-second best language for everything.”
+Principal component analysis is an unsupervised learning technique used
+to uncover a lower-dimensional representation of correlated variables.
+It can be used, among other things, to generate perceptual or
+competitive maps that visualize how brands compare with each other in a
+lower-dimensional space.
 
 ## Project Organization
 
