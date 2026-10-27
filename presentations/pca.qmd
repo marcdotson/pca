@@ -17,22 +17,34 @@ execute:
 jupyter: python3
 ---
 
+# Club Announcements {background-color="#288DC2"}
+
+## Upcoming Events
+
+::: {.incremental}
+- Adobe Case Competition going on right now! Final submission are due on October 30th. Presentations will begin the following week!
+- Marketing Analytics Club x Sports Analytics Club ASC Studio on Nov. 5th at noon in this space!
+- November Marketing Analytics Club meeting: intro to A/B testing with industry professional. More details to come soon!
+:::
+
 # Finding Data {background-color="#288DC2"}
 
 ## Garbage in, garbage out
 
-Ideas for finding data
+There are tons of places online where you can find free, downloadable data. Some reliable sites include:
 
 ::: {.incremental}
-- Idea
-- Another idea
+- Kaggle
+- Google Dataset Search
+- Data.gov
+- Plenty of other places too (but be careful!)
 :::
 
 # Cleaning Data {background-color="#288DC2"}
 
 ## Data wrangling with Polars/Pandas?
 
-Code won't run unless specified...
+Polars and Pandas are python libraries that allow you to pull in datasets and transform the data in order to perform analysis.
 
 ```{python}
 import polars as pl
@@ -103,7 +115,7 @@ where $\sum_{j=1}^{p-1} \phi_{j,k}^2 = 1$ (i.e., "normalized")
 - $\phi$s are the **loadings** of each principal component
 - $\phi_{j,1}$ represents the $j$th loading corresponding to the $j$th predictor of the first principal component
 - The predictors all need to be **standardized before performing PCA**
-- At most there are $p$ principal commponents
+- At most there are $p$ principal components
 :::
 
 ## Uncorrelated components
