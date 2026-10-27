@@ -34,22 +34,23 @@ jupyter: python3
 ::: {.column width="50%"}
 **Data Analytics**
 
+*Major*
+
 - Common core
 - Specialized tracks
 - Recommended minor
-- Similar minor
+
+*Minor*
+
+- Core + tracks
 
 :::
 
 ::: {.column width="50%"}
-**Marketing**
-
-- Specialized minor
-:::
-
 ::: {.incremental}
-1. Would a Data Analytics Marketing Analytics track and/or a specialized Marketing Analytics minor be helpful? Why or why not?
-2. What courses or topics do you think should be in a Marketing Analytics major track or minor?
+1. Would a Marketing Analytics track be an appealing option? Why or why not?
+2. What courses or topics do you think should be in a Marketing Analytics track?
+:::
 :::
 
 ::::
