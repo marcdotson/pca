@@ -17,15 +17,42 @@ execute:
 jupyter: python3
 ---
 
-# Club Announcements {background-color="#288DC2"}
+# Announcements {background-color="#288DC2"}
 
-## Upcoming Events
+## Upcoming events
 
 ::: {.incremental}
 - Adobe Case Competition going on right now! Final submission are due on October 30th. Presentations will begin the following week!
 - Marketing Analytics Club x Sports Analytics Club ASC Studio on Nov. 5th at noon in this space!
 - November Marketing Analytics Club meeting: intro to A/B testing with industry professional. More details to come soon!
 :::
+
+## Possible curriculum changes
+
+:::: {.columns}
+
+::: {.column width="50%"}
+**Data Analytics**
+
+- Common core
+- Specialized tracks
+- Recommended minor
+- Similar minor
+
+:::
+
+::: {.column width="50%"}
+**Marketing**
+
+- Specialized minor
+:::
+
+::: {.incremental}
+1. Would a Data Analytics Marketing Analytics track and/or a specialized Marketing Analytics minor be helpful? Why or why not?
+2. What courses or topics do you think should be in a Marketing Analytics major track or minor?
+:::
+
+::::
 
 # Finding Data {background-color="#288DC2"}
 
@@ -39,33 +66,6 @@ There are tons of places online where you can find free, downloadable data. Some
 - Data.gov
 - Plenty of other places too (but be careful!)
 :::
-
-# Cleaning Data {background-color="#288DC2"}
-
-## Data wrangling with Polars/Pandas?
-
-Polars and Pandas are python libraries that allow you to pull in datasets and transform the data in order to perform analysis.
-
-```{python}
-import polars as pl
-from plotnine import *
-from pyprojroot.here import here
-
-# Load data.
-customer_data = pl.read_csv(here('data/customer_data.csv'))
-store_transactions = pl.read_csv(here('data/store_transactions.csv'))
-
-# Visualize customers by region.
-(ggplot(customer_data, aes(x = 'region'))
-  + geom_bar()
-)
-
-# Number of customers by region.
-(customer_data
-  .group_by(pl.col('region'))
-  .agg(n = pl.len())
-)
-```
 
 # Principal Component Analysis {background-color="#288DC2"}
 
@@ -81,12 +81,12 @@ Unsupervised learning is one of three types of machine learning (the other two a
 
 ## Dimensionality reduction methods
 
-Dimensionality (e.g., dimension) reduction refers to unsupervised learning methods that **summarize a large number of variables** into a smaller number of **latent variables**
+Dimensionality (e.g., dimension) reduction **summarizes a large number of variables** into a smaller number of **latent variables**
 
 ::: {.incremental}
 - Factor analysis
-- Principal component analysis (PCA)
 - Multi-dimensional scaling
+- Principal component analysis (PCA)
 :::
 
 ## Learning a low-dimensional representation
@@ -94,24 +94,22 @@ Dimensionality (e.g., dimension) reduction refers to unsupervised learning metho
 The goal of **principal component analysis** (PCA) is to find a **low-dimensional representation of the data** that captures the important information from the original high-dimensional data
 
 ::: {.incremental}
-- For example, PCA could let us go from a 10-variable model to a 2-variable model while still retaining the important information from all 10 variables
+- For example, PCA could let us go from 10-variables to 2-variables while still retaining the important information from all 10 variables
 - These new variables are called **principal components**
-- Evidence suggests most data sets exist on a **lower-dimensional manifold** (e.g., balled-up piece of paper)
-- While all $n$ observations exist in a $p$-dimensional space, not every dimension is informative
 :::
 
 ## Normalized linear combinations
 
-Each $k$ principal components is a **normalized linear combination** of the original $p-1$ predictor variables
+Each principal component is a **normalized linear combination** of the original $p$ variables
 
 $$
-PC_{k} = \phi_{1,k} X_{1} + \phi_{2,k} X_{2} + \phi_{3,k} X_{3} + \cdots + \phi_{p-1,k} X_{p-1}
+PC_{k} = \phi_{1,k} X_{1} + \phi_{2,k} X_{2} + \phi_{3,k} X_{3} + \cdots + \phi_{p,k} X_{p}
 $$
 
-where $\sum_{j=1}^{p-1} \phi_{j,k}^2 = 1$ (i.e., "normalized")
+where $\sum_{j=1}^{p} \phi_{j,k}^2 = 1$ (i.e., "normalized")
 
 ::: {.incremental}
-- There are $p$ predictors including the intercept so we really have $p−1$ predictors
+- There are $p$ variables
 - $\phi$s are the **loadings** of each principal component
 - $\phi_{j,1}$ represents the $j$th loading corresponding to the $j$th predictor of the first principal component
 - The predictors all need to be **standardized before performing PCA**
@@ -131,7 +129,6 @@ $$
 
 ::: {.incremental}
 - PCA can transform highly correlated variables into a few main, **uncorrelated principal components**
-- Since the principal components are uncorrelated, multicollinearity is no longer an issue
 - However, **interpretability** of the components can be difficult
 :::
 
@@ -173,12 +170,13 @@ A competitive (or perceptual) map is a graphic representing the structure of a m
 - The dimensions of the map have to be named by the analyst using the relative position of each unit and the **loadings** if each principal component
 :::
 
-## Brand ratings data
+## Brand ratings data {.scrollable}
 
 We'll use some example brand ratings data (courtesy of Feit and Chapman's *Python for Marketing Research and Analytics*)
 
 ```{python}
 #| eval: true
+#| code-line-numbers: "|1|2|3,9|4-6|8-11"
 
 import polars as pl
 from plotnine import *
@@ -201,12 +199,13 @@ brand_data
 theme_update(figure_size=(5, 5))
 ```
 
-## Aggregate data by brand
+## Aggregate data by brand {.scrollable}
 
-We'll need one observation per brand across all of the variables
+We'll need **one observation per brand** across all of the variables (if your data isn't already structured that way)
 
 ```{python}
 #| eval: true
+#| code-line-numbers: "|2|3|3-4|"
 
 # Aggregate the ratings by brand
 brand_means = (brand_data
@@ -217,12 +216,13 @@ brand_means = (brand_data
 brand_means
 ```
 
-## Combine normalizing and PCA
+## Normalize the data, run PCA, save the output
 
-A **pipeline** is a scikit-learn object that combines feature engineering (e.g., normalizing data) and the model (e.g., PCA)
+Once you have **numeric data** with **one observation per brand**, you can run PCA (i.e., this is the code you'll want to use)
 
 ```{python}
 #| eval: true
+#| code-line-numbers: "1-2|4-8|6|7|10-13"
 
 # Specify the data to model
 X = brand_means.drop('brand')
@@ -237,19 +237,14 @@ pca_pipe = Pipeline([
 pca_fit = pca_pipe.fit(X)
 pca_scores = pca_fit.transform(X)
 pca_steps = pca_fit.named_steps['pca']
-
-# Create a loadings data frame
-pca_loadings = pl.DataFrame(
-  pca_steps.components_[:2].T,
-  schema=[f"PC{i}" for i in range(1, 3)],
-)
 ```
 
-## Visualize the mapping
+## Dimensions *reduced* {.scrollable}
+
+We've gone from the **original data** to a **brand map**
 
 ```{python}
 #| eval: true
-#| output-location: column
 
 # Create a brand map
 brand_map = pl.DataFrame({
@@ -257,6 +252,18 @@ brand_map = pl.DataFrame({
   'PC1': pca_scores[:, 0],
   'PC2': pca_scores[:, 1]
 })
+
+brand_map
+```
+
+## Visualize the mapping
+
+Which brands compete? How could a brand differentiate itself?
+
+```{python}
+#| eval: true
+#| code-line-numbers: "|1-4|5-12|13|14|"
+#| output-location: column
 
 # Plot the brand map
 (ggplot(brand_map, aes(
@@ -275,10 +282,19 @@ brand_map = pl.DataFrame({
 )
 ```
 
-## Name the first principal component
+## Name the first principal component {.scrollable}
+
+The **loadings** are the best tool for naming the principal components
 
 ```{python}
 #| eval: true
+#| code-line-numbers: "|1-5|8|9|10|11|"
+
+# Create a loadings data frame
+pca_loadings = pl.DataFrame(
+  pca_steps.components_[:2].T,
+  schema=[f"PC{i}" for i in range(1, 3)],
+)
 
 # Print the first principal component
 (pca_loadings
@@ -288,12 +304,15 @@ brand_map = pl.DataFrame({
 )
 ```
 
-## Name the second principal component
+## Name the second principal component {.scrollable}
+
+The **loadings** are the best tool for naming the principal components
 
 ```{python}
 #| eval: true
+#| code-line-numbers: "|4-5|"
 
-# Print the first principal component
+# Print the second principal component
 (pca_loadings
   .with_columns(variable = pl.Series(X.columns))
   .select('PC2', 'variable')
@@ -301,5 +320,5 @@ brand_map = pl.DataFrame({
 )
 ```
 
-# Questions? {background-color="#288DC2"}
+# Questions? Practice! {background-color="#288DC2"}
 

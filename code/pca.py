@@ -28,12 +28,6 @@ pca_fit = pca_pipe.fit(X)
 pca_scores = pca_fit.transform(X)
 pca_steps = pca_fit.named_steps['pca']
 
-# Create a loadings data frame
-pca_loadings = pl.DataFrame(
-  pca_steps.components_[:2].T,
-  schema=[f"PC{i}" for i in range(1, 3)],
-)
-
 # Create a brand map
 brand_map = pl.DataFrame({
   'brand': brand_means.get_column('brand'),
@@ -57,6 +51,12 @@ brand_map = pl.DataFrame({
   + geom_text(nudge_y = 0.1, va = 'bottom')
 )
 
+# Create a loadings data frame
+pca_loadings = pl.DataFrame(
+  pca_steps.components_[:2].T,
+  schema=[f"PC{i}" for i in range(1, 3)],
+)
+
 # Print the first principal component
 (pca_loadings
   .with_columns(variable = pl.Series(X.columns))
@@ -64,7 +64,7 @@ brand_map = pl.DataFrame({
   .sort('PC1', descending = True)
 )
 
-# Print the first principal component
+# Print the second principal component
 (pca_loadings
   .with_columns(variable = pl.Series(X.columns))
   .select('PC2', 'variable')
