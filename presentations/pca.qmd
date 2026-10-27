@@ -151,57 +151,143 @@ $$
 
 # Competitive Maps {background-color="#288DC2"}
 
-## Combine standardizing and model specification
+## Visualizing (perceived) competition
 
-Remember, a **pipeline** is a scikit-learn object that combines feature engineering (i.e., transformations) and the model (e.g., PCA)
+A competitive (or perceptual) map is a graphic representing the structure of a market, category, etc. with respect to some number of descriptive or perceptual dimensions
+
+::: {.incremental}
+- The map typically represents **two dimensions** at a time
+- The mapping is composed using data on the **relative position** of each unit with respect to dimensions that are the results from a dimension-reduction technique (i.e., PCA) on the original data
+- The dimensions of the map have to be named by the analyst using the relative position of each unit and the **loadings** if each principal component
+:::
+
+## Brand ratings data
+
+We'll use some example brand ratings data (courtesy of Feit and Chapman's *Python for Marketing Research and Analytics*)
 
 ```{python}
-#| code-line-numbers: "|4|7|12"
+#| eval: true
 
-from sklearn.model_selection import train_test_split
+import polars as pl
+from plotnine import *
+from pyprojroot.here import here
+from sklearn.decomposition import PCA
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-from sklearn.decomposition import PCA
 
-# Split data into train and test
-X_train, X_test = train_test_split(X, test_size = 0.2, random_state = 42)
+# Load data
+brand_data = pl.read_csv(here('data/brand-ratings.csv'))
+
+brand_data
+```
+
+```{python}
+#| eval: true
+#| echo: false
+
+# Set a default plot size
+theme_update(figure_size=(5, 5))
+```
+
+## Aggregate data by brand
+
+We'll need one observation per brand across all of the variables
+
+```{python}
+#| eval: true
+
+# Aggregate the ratings by brand
+brand_means = (brand_data
+  .group_by(pl.col('brand'))
+  .agg(pl.all().exclude('brand').mean())
+)
+
+brand_means
+```
+
+## Combine normalizing and PCA
+
+A **pipeline** is a scikit-learn object that combines feature engineering (e.g., normalizing data) and the model (e.g., PCA)
+
+```{python}
+#| eval: true
+
+# Specify the data to model
+X = brand_means.drop('brand')
 
 # Create a pipeline
 pca_pipe = Pipeline([
-  ('feature_engineering', StandardScaler()),
-  ('pca', PCA(n_components = X_train.shape[1])),
+  ('normalize', StandardScaler()),
+  ('pca', PCA(n_components = 2))
 ])
+
+# Fit PCA and get scores
+pca_fit = pca_pipe.fit(X)
+pca_scores = pca_fit.transform(X)
+pca_steps = pca_fit.named_steps['pca']
+
+# Create a loadings data frame
+pca_loadings = pl.DataFrame(
+  pca_steps.components_[:2].T,
+  schema=[f"PC{i}" for i in range(1, 3)],
+)
 ```
 
-## Fit the model and extract components
-
-Hyperparameter tuning on $k$ is accomplished by PCA fitting up to $p$ principal components
+## Visualize the mapping
 
 ```{python}
-#| code-line-numbers: "|1-2|4-6|5|6|8"
+#| eval: true
+#| output-location: column
 
-# Fit PCA
-pca_fit = pca_pipe.fit(X_train)
+# Create a brand map
+brand_map = pl.DataFrame({
+  'brand': brand_means.get_column('brand'),
+  'PC1': pca_scores[:, 0],
+  'PC2': pca_scores[:, 1]
+})
 
-# Extract explained variance ratio
-pca_steps = pca_fit.named_steps['pca']
-pca_scores = pca_steps.explained_variance_ratio_
-
-print(pca_scores)
+# Plot the brand map
+(ggplot(brand_map, aes(
+    x = 'PC1', y = 'PC2', label = 'brand'
+  ))
+  + geom_hline(yintercept = 0, 
+    linetype = 'dashed', 
+    color = 'grey'
+  )
+  + geom_vline(xintercept = 0, 
+    linetype = 'dashed', 
+    color = 'grey'
+  )
+  + geom_point(size = 3)
+  + geom_text(nudge_y = 0.1, va = 'bottom')
+)
 ```
 
+## Name the first principal component
 
+```{python}
+#| eval: true
 
+# Print the first principal component
+(pca_loadings
+  .with_columns(variable = pl.Series(X.columns))
+  .select('PC1', 'variable')
+  .sort('PC1', descending = True)
+)
+```
 
+## Name the second principal component
 
-## {background-color="#0F2439"}
+```{python}
+#| eval: true
 
-### Application {.lato-font}
+# Print the first principal component
+(pca_loadings
+  .with_columns(variable = pl.Series(X.columns))
+  .select('PC2', 'variable')
+  .sort('PC2', descending = True)
+)
+```
 
-1. Install uv (visit [docs.astral.sh/uv](https://docs.astral.sh/uv/getting-started/installation/)) via the command line
-2. Restart the command line and install Python using `uv python install` via the command line
-3. Register for a GitHub account with a *professional username* using your student email address (visit [github.com](https://github.com)) and download this workshop repository (visit [github.com/marcdotson/pydata-python](https://github.com/marcdotson/pydata-python))
-4. Download and install VS Code (visit [code.visualstudio.com](https://code.visualstudio.com)) and the Python extension in VS Code
-5. Inside VS Code, open the downloaded workshop repository and activate the project environment with `uv run` via the terminal
-6. Use and modify the Python script or notebook and explore the included data
+# Questions? {background-color="#288DC2"}
 
